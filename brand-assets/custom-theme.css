@@ -1,0 +1,86 @@
+/* ============================================
+   SalesHub - Tema Verde Customizado
+   Primária:  #23c93e
+   Média:     #1e6d05
+   Escura:    #114f00
+   ============================================ */
+
+:root {
+  /* Paleta principal (woot = cor primária do Chatwoot) */
+  --color-woot:   #23c93e;
+
+  --w-25:  #f0fdf2;
+  --w-50:  #e8fbed;
+  --w-75:  #d2f7da;
+  --w-100: #b3f0be;
+  --w-200: #86e69a;
+  --w-300: #53d96d;
+  --w-400: #33d450;
+  --w-500: #23c93e;
+  --w-600: #1eb035;
+  --w-700: #1e6d05;
+  --w-800: #165204;
+  --w-900: #114f00;
+
+  /* Cor de destaque (links, botões ativos, badges) */
+  --color-woot-medium: #1e6d05;
+  --color-woot-dark:   #114f00;
+
+  /* Meta color para o navegador */
+  --theme-color: #23c93e;
+}
+
+/* Botões primários */
+.button.nice.success,
+.button.primary,
+[class*="bg-woot-500"],
+[class*="bg-woot-600"] {
+  background-color: #23c93e !important;
+  border-color: #23c93e !important;
+}
+
+[class*="bg-woot-700"],
+[class*="bg-woot-800"] {
+  background-color: #1e6d05 !important;
+  border-color: #1e6d05 !important;
+}
+
+/* Links e textos coloridos */
+[class*="text-woot-500"],
+[class*="text-woot-600"] {
+  color: #23c93e !important;
+}
+
+[class*="text-woot-700"],
+[class*="text-woot-800"],
+[class*="text-woot-900"] {
+  color: #1e6d05 !important;
+}
+
+/* Bordas e outlines */
+[class*="border-woot-500"],
+[class*="border-woot-600"] {
+  border-color: #23c93e !important;
+}
+
+/* Aba ativa e indicadores */
+[class*="border-b-woot"],
+.active-tab,
+[class*="active"][class*="woot"] {
+  border-color: #23c93e !important;
+  color: #23c93e !important;
+}
+
+/* Checkbox e radio selecionados */
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  accent-color: #23c93e;
+}
+
+/* Scrollbar (navegadores webkit) */
+::-webkit-scrollbar-thumb {
+  background-color: #86e69a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #23c93e;
+}

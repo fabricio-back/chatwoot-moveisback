@@ -1,0 +1,17 @@
+# Força LF para arquivos de código copiados para o container Linux
+*.vue text eol=lf
+*.rb text eol=lf
+*.erb text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+Dockerfile* text eol=lf
+
+# Arquivos binários — sem conversão de LF
+*.png binary
+*.jpg binary
+*.ico binary

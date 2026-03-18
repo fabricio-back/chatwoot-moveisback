@@ -1,0 +1,23 @@
+# Arquivo de exemplo para configurações customizadas
+# Copie e adapte conforme necessário
+
+# Exemplo de configuração
+app:
+  name: "Chatwoot Custom"
+  version: "1.0.0"
+  environment: "production"
+
+# Features personalizadas
+features:
+  custom_feature_1: true
+  custom_feature_2: false
+  timeout: 30
+
+# Integrações
+integrations:
+  # webhook_url: "https://seu-webhook.com/endpoint"
+  # api_key: "sua-chave-api"
+  enabled: false
+
+# Observação: Este é apenas um exemplo
+# Adapte de acordo com as necessidades da sua aplicação

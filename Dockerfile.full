@@ -1,0 +1,82 @@
+# ========================================
+# Stage 1: Clone e Build dos Assets
+# ========================================
+FROM node:24-alpine AS assets-builder
+
+WORKDIR /build
+
+# Instalar dependências do sistema
+RUN apk add --no-cache \
+    git \
+    python3 \
+    make \
+    g++ \
+    postgresql-dev \
+    vips-dev \
+    vips-tools
+
+# Clonar repositório Chatwoot
+RUN git clone --depth 1 https://github.com/fazer-ai/chatwoot.git .
+
+# Copiar customizações do frontend
+COPY ./custom/ChatList.vue /build/app/javascript/dashboard/components/ChatList.vue
+COPY ./custom/Sidebar.vue /build/app/javascript/dashboard/components-next/sidebar/Sidebar.vue
+# Substituir "powered by fazer.ai" por "powered by verticegrowth.com" na login
+COPY ./custom/LoginIndex.vue /build/app/javascript/v3/views/login/Index.vue
+# Substituir paleta de cores: woot azul → woot verde (SalesHub theme)
+COPY ./custom/theme-colors.js /build/theme/colors.js
+# Instalar pnpm via corepack
+RUN corepack enable && \
+    corepack prepare pnpm@latest --activate
+
+# Instalar dependências Node
+RUN pnpm install --frozen-lockfile
+
+# Build dos assets do frontend
+ENV NODE_ENV=production
+ENV RAILS_ENV=production
+# Build SDK e App (Vite)
+RUN pnpm run build:sdk && \
+    npx vite build
+
+# ========================================
+# Stage 2: Imagem Final com Assets
+# ========================================
+FROM ghcr.io/fazer-ai/chatwoot:latest
+
+# Metadata
+LABEL maintainer="seu-email@exemplo.com"
+LABEL description="Chatwoot Custom - Build completo com assets recompilados"
+LABEL version="1.5.0"
+
+# Limpar assets Vite antigos e substituir pelos customizados
+RUN rm -rf /app/public/vite/*
+
+# Copiar assets Vite compilados do builder (diretório correto: public/vite)
+COPY --from=assets-builder /build/public/vite /app/public/vite
+
+# Copiar SDK compilado (public/packs/js/sdk.js)
+COPY --from=assets-builder /build/public/packs/js/sdk.js /app/public/packs/js/sdk.js
+
+# Copiar customização do backend (Ruby)
+COPY ./custom/permission_filter_service.rb /app/app/services/conversations/permission_filter_service.rb
+
+# Inicializador de brand (corrige logo no startup, se necessário)
+COPY ./custom/saleshub_brand.rb /app/config/initializers/saleshub_brand.rb
+
+# Copiar layout customizado com tema de cores
+COPY ./custom/vueapp.html.erb /app/app/views/layouts/vueapp.html.erb
+
+# Copiar brand assets customizados (logo, favicon, banner)
+COPY ./brand-assets /app/public/brand-assets
+
+# Ajustar permissões
+RUN chown -R $(stat -c '%u:%g' /app) /app/public/vite /app/public/packs/js /app/public/brand-assets || true
+
+# Healthcheck
+HEALTHCHECK --interval=60s --timeout=20s --start-period=60s --retries=5 \
+  CMD wget -qO- --header="Accept: text/html" http://127.0.0.1:3000/ || exit 1
+
+WORKDIR /app
+
+# Mantém o entrypoint e comando padrão da imagem base
