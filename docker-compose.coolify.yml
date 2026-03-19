@@ -144,8 +144,10 @@ services:
       - 'DATABASE_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-chatwoot_production}?schema=kanbancw'
       # Banco do Chatwoot — usado para injetar o Dashboard Script em installation_configs
       - 'CHATWOOT_DATABASE_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-chatwoot_production}'
-      # URL pública do backend do Kanban (configure em Coolify: ex. https://kanban-api.seudominio.com)
-      - 'KANBANCW_DOMAIN=${KANBAN_BACKEND_URL}'
+      # URL pública do FRONTEND do Kanban — usada para gerar o src do iframe no Dashboard Script
+      - 'KANBANCW_DOMAIN=${KANBAN_FRONTEND_URL}'
+      # URL pública do backend do Kanban — usada para chamadas de API internas
+      - 'KANBANCW_API_DOMAIN=${KANBAN_BACKEND_URL}'
       - 'CHATWOOT_DOMAIN=${FRONTEND_URL}'
       # URL INTERNA do Chatwoot (via rede Docker) — evita chamar localhost dentro do container
       - CHATWOOT_API_URL=http://rails:3000
