@@ -31,6 +31,8 @@ COPY ./custom/theme-colors.js /build/theme/colors.js
 COPY ./custom/conversations_getters.js /build/app/javascript/dashboard/store/modules/conversations/getters.js
 # v1.11 — applyRoleFilter: agentes só veem conversas onde são assignee ou participantes
 COPY ./custom/conversations_helpers.js /build/app/javascript/dashboard/store/modules/conversations/helpers.js
+# Kanban de Etiquetas — substitui o paywall do kanban_view com implementação real
+COPY ./custom/KanbanIndex.vue /build/app/javascript/dashboard/routes/dashboard/kanban/Index.vue
 # Instalar pnpm via corepack (versão fixada para evitar incompatibilidade)
 RUN corepack enable && \
     corepack prepare pnpm@9.15.4 --activate
