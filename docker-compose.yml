@@ -1,7 +1,7 @@
 services:
   rails:
     # Build customizado com assets recompilados
-    image: meu-chatwoot-custom:v1.6
+    image: meu-chatwoot-custom:v1.10
     container_name: chatwoot-rails
     ports:
       - "3000:3000"
@@ -68,7 +68,7 @@ services:
       retries: 10
 
   sidekiq:
-    image: meu-chatwoot-custom:v1.6
+    image: meu-chatwoot-custom:v1.10
     container_name: chatwoot-sidekiq
     volumes:
       - storage:/app/storage
@@ -158,6 +158,55 @@ services:
       test: ["CMD-SHELL", "redis-cli -h localhost -p 6379 ${REDIS_PASSWORD:+-a $REDIS_PASSWORD} ping"]
       interval: 20s
       timeout: 20s
+      retries: 10
+
+  kanban-backend:
+    image: astraonline/kanbanback:develop
+    container_name: kanban-backend
+    ports:
+      - "3001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Banco próprio do Kanban (schema isolado no mesmo Postgres)
+      - DATABASE_URL=postgresql://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DATABASE:-chatwoot_production}?schema=kanbancw
+      # Banco do Chatwoot — para injetar o Dashboard Script
+      - CHATWOOT_DATABASE_URL=postgresql://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DATABASE:-chatwoot_production}
+      # URL pública local do FRONTEND do kanban (é o que vai no iframe do Chatwoot)
+      - KANBANCW_DOMAIN=http://localhost:3002
+      - CHATWOOT_DOMAIN=${FRONTEND_URL:-http://localhost:3000}
+      # URL INTERNA do Chatwoot (via rede Docker) — evita chamar localhost dentro do container
+      - CHATWOOT_API_URL=http://rails:3000
+      - CORS_ORIGIN=http://localhost:3002,${FRONTEND_URL:-http://localhost:3000}
+      # Redis compartilhado
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  kanban-frontend:
+    image: astraonline/kanbanfront:develop
+    container_name: kanban-frontend
+    ports:
+      - "3002:80"
+    depends_on:
+      - kanban-backend
+    environment:
+      # URL pública local do BACKEND do kanban
+      - VITE_API_URL=http://localhost:3001
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/nginx-health"]
+      interval: 30s
+      timeout: 10s
       retries: 10
 
   baileys-api:

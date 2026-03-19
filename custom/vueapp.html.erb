@@ -74,6 +74,36 @@
     <%= vite_client_tag %>
     <%= vite_javascript_tag @application_pack %>
     <link rel="stylesheet" href="/brand-assets/custom-theme.css">
+    <script>
+      // Evita duplicação dos itens de menu injetados pelo KanbanCW.
+      // O script do KanbanCW usa um flag em memória (menuItemsAdded) que não
+      // resiste a re-renders parciais do Vue. Este observer limpa duplicatas
+      // sempre que mais de um elemento com o mesmo ID for detectado na sidebar.
+      (function () {
+        var KANBAN_IDS = [
+          'cw-custom-menu-kanban',
+          'cw-custom-menu-conexoes',
+          'cw-custom-menu-chats',
+          'cw-custom-menu-projetos',
+          'cw-custom-menu-permissoes',
+          'cw-custom-menu-chatbot',
+          'cw-custom-menu-permissions',
+        ];
+        function removeDuplicateMenuItems() {
+          KANBAN_IDS.forEach(function (id) {
+            var els = document.querySelectorAll('[id="' + id + '"]');
+            for (var i = 1; i < els.length; i++) {
+              var li = els[i].closest('li') || els[i].parentElement;
+              if (li) li.remove(); else els[i].remove();
+            }
+          });
+        }
+        var observer = new MutationObserver(removeDuplicateMenuItems);
+        document.addEventListener('DOMContentLoaded', function () {
+          observer.observe(document.body, { childList: true, subtree: true });
+        });
+      })();
+    </script>
   </head>
   <body class="text-slate-600">
     <div id="app"></div>

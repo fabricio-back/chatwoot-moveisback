@@ -27,6 +27,8 @@ COPY ./custom/Sidebar.vue /build/app/javascript/dashboard/components-next/sideba
 COPY ./custom/LoginIndex.vue /build/app/javascript/v3/views/login/Index.vue
 # Substituir paleta de cores: woot azul → woot verde (SalesHub theme)
 COPY ./custom/theme-colors.js /build/theme/colors.js
+# Patchar getMineChats para incluir conversas onde o usuário é participante
+COPY ./custom/conversations_getters.js /build/app/javascript/dashboard/store/modules/conversations/getters.js
 # Instalar pnpm via corepack
 RUN corepack enable && \
     corepack prepare pnpm@latest --activate
@@ -62,6 +64,8 @@ COPY --from=assets-builder /build/public/packs/js/sdk.js /app/public/packs/js/sd
 
 # Copiar customização do backend (Ruby)
 COPY ./custom/permission_filter_service.rb /app/app/services/conversations/permission_filter_service.rb
+COPY ./custom/conversation_finder.rb /app/app/finders/conversation_finder.rb
+COPY ./custom/_conversation.json.jbuilder /app/app/views/api/v1/conversations/partials/_conversation.json.jbuilder
 
 # Inicializador de brand (corrige logo no startup, se necessário)
 COPY ./custom/saleshub_brand.rb /app/config/initializers/saleshub_brand.rb

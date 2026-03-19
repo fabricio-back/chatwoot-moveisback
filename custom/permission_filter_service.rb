@@ -16,10 +16,19 @@ class Conversations::PermissionFilterService
   private
 
   def accessible_conversations
-    # Agentes só veem conversas atribuídas a eles dentro das suas inboxes
-    conversations
-      .where(inbox: user.inboxes.where(account_id: account.id))
-      .where(assignee_id: user.id)
+    # Agentes veem conversas onde são assignee OU participante
+    participant_conversation_ids = ConversationParticipant
+      .where(user_id: user.id)
+      .pluck(:conversation_id)
+
+    scope = conversations.where(inbox: user.inboxes.where(account_id: account.id))
+
+    if participant_conversation_ids.present?
+      scope.where(assignee_id: user.id)
+           .or(scope.where(id: participant_conversation_ids))
+    else
+      scope.where(assignee_id: user.id)
+    end
   end
 
   def account_user
