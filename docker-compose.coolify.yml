@@ -151,7 +151,7 @@ services:
       - 'CHATWOOT_DOMAIN=${FRONTEND_URL}'
       # URL INTERNA do Chatwoot (via rede Docker) — evita chamar localhost dentro do container
       - CHATWOOT_API_URL=http://rails:3000
-      - 'CORS_ORIGIN=${FRONTEND_URL}'
+      - 'CORS_ORIGIN=${FRONTEND_URL},${KANBAN_FRONTEND_URL}'
       # Redis compartilhado com o Chatwoot
       - REDIS_HOST=redis
       - REDIS_PORT=6379
