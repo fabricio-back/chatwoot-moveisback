@@ -164,6 +164,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
+    labels:
+      # Rota adicional: captura /socket.io/ vindo do domínio do frontend e faz proxy para o backend
+      - 'traefik.http.routers.kanban-socketio.rule=Host(`kanban.moveisback.com.br`) && PathPrefix(`/socket.io`)'
+      - 'traefik.http.routers.kanban-socketio.entrypoints=https'
+      - 'traefik.http.routers.kanban-socketio.tls=true'
+      - 'traefik.http.routers.kanban-socketio.service=kanban-socketio-svc'
+      - 'traefik.http.services.kanban-socketio-svc.loadbalancer.server.port=3000'
 
   kanban-frontend:
     image: 'astraonline/kanbanfront:develop'
