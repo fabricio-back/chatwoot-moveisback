@@ -29,6 +29,8 @@ COPY ./custom/LoginIndex.vue /build/app/javascript/v3/views/login/Index.vue
 COPY ./custom/theme-colors.js /build/theme/colors.js
 # Patchar getMineChats para incluir conversas onde o usuário é participante
 COPY ./custom/conversations_getters.js /build/app/javascript/dashboard/store/modules/conversations/getters.js
+# v1.11 — applyRoleFilter: agentes só veem conversas onde são assignee ou participantes
+COPY ./custom/conversations_helpers.js /build/app/javascript/dashboard/store/modules/conversations/helpers.js
 # Instalar pnpm via corepack
 RUN corepack enable && \
     corepack prepare pnpm@latest --activate
@@ -69,6 +71,10 @@ COPY ./custom/_conversation.json.jbuilder /app/app/views/api/v1/conversations/pa
 
 # Inicializador de brand (corrige logo no startup, se necessário)
 COPY ./custom/saleshub_brand.rb /app/config/initializers/saleshub_brand.rb
+# v1.12 — NotificationListener: apenas admins recebem notificação de conversa criada
+COPY ./custom/notification_listener.rb /app/app/listeners/notification_listener.rb
+# v1.13 — SearchService: aplica PermissionFilterService nas buscas
+COPY ./custom/search_service.rb /app/app/services/search_service.rb
 
 # Copiar layout customizado com tema de cores
 COPY ./custom/vueapp.html.erb /app/app/views/layouts/vueapp.html.erb
