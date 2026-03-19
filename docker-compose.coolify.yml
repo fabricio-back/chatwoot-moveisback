@@ -171,8 +171,10 @@ services:
     depends_on:
       - kanban-backend
     environment:
-      # URL pública do backend do Kanban (mesma que KANBAN_BACKEND_URL)
+      # URL pública do backend do Kanban — usada pelo Vite para chamadas de API
       - 'VITE_API_URL=${KANBAN_BACKEND_URL}'
+      # URL usada pelo nginx do container para proxy de /api/ e /socket.io/
+      - 'API_URL=${KANBAN_BACKEND_URL}'
     restart: always
     healthcheck:
       disable: true
