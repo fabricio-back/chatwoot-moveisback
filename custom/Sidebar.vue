@@ -14,6 +14,7 @@ import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 import Button from 'dashboard/components-next/button/Button.vue';
+import InternalChat from './InternalChat.vue';
 import SidebarGroup from './SidebarGroup.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
 import SidebarChangelogCard from './SidebarChangelogCard.vue';
@@ -78,6 +79,7 @@ const toggleShortcutModalFn = show => {
 useSidebarKeyboardShortcuts(toggleShortcutModalFn);
 
 const expandedItem = ref(null);
+const isInternalChatOpen = ref(false);
 
 const setExpandedItem = name => {
   expandedItem.value = expandedItem.value === name ? null : name;
@@ -861,8 +863,42 @@ const menuItems = computed(() => {
           :is-collapsed="isEffectivelyCollapsed"
           @open-key-shortcut-modal="emit('openKeyShortcutModal')"
         />
+        <button
+          v-if="!isEffectivelyCollapsed"
+          class="flex items-center justify-center size-7 rounded-lg hover:bg-n-alpha-2 transition-colors flex-shrink-0"
+          :class="{ 'bg-n-alpha-2 text-n-brand': isInternalChatOpen, 'text-n-slate-11': !isInternalChatOpen }"
+          title="Chat Interno"
+          @click="isInternalChatOpen = !isInternalChatOpen"
+        >
+          <span class="i-lucide-message-square-text size-4" />
+        </button>
+        <button
+          v-else
+          class="flex items-center justify-center size-8 rounded-lg hover:bg-n-alpha-2 transition-colors"
+          :class="{ 'bg-n-alpha-2 text-n-brand': isInternalChatOpen, 'text-n-slate-11': !isInternalChatOpen }"
+          title="Chat Interno"
+          @click="isInternalChatOpen = !isInternalChatOpen"
+        >
+          <span class="i-lucide-message-square-text size-4" />
+        </button>
       </div>
     </section>
+    <!-- Chat Interno: overlay que cobre o sidebar quando aberto -->
+    <Transition
+      enter-active-class="transition-transform duration-200 ease-out"
+      enter-from-class="-translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-150 ease-in"
+      leave-from-class="translate-x-0"
+      leave-to-class="-translate-x-full"
+    >
+      <div
+        v-if="isInternalChatOpen"
+        class="absolute inset-0 z-50 bg-n-background flex flex-col overflow-hidden"
+      >
+        <InternalChat @close="isInternalChatOpen = false" />
+      </div>
+    </Transition>
     <!-- Resize Handle (desktop only) -->
     <div
       class="hidden md:block absolute top-0 h-full w-1 cursor-col-resize z-40 ltr:right-0 rtl:left-0 group"

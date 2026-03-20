@@ -23,6 +23,8 @@ RUN git clone --depth 1 --branch v4.11.1-fazer-ai.37 https://github.com/fazer-ai
 # Copiar customizações do frontend
 COPY ./custom/ChatList.vue /build/app/javascript/dashboard/components/ChatList.vue
 COPY ./custom/Sidebar.vue /build/app/javascript/dashboard/components-next/sidebar/Sidebar.vue
+# Chat Interno entre agentes
+COPY ./custom/InternalChat.vue /build/app/javascript/dashboard/components-next/sidebar/InternalChat.vue
 # Substituir "powered by fazer.ai" por "powered by verticegrowth.com" na login
 COPY ./custom/LoginIndex.vue /build/app/javascript/v3/views/login/Index.vue
 # Substituir paleta de cores: woot azul → woot verde (SalesHub theme)
@@ -75,6 +77,8 @@ COPY ./custom/saleshub_brand.rb /app/config/initializers/saleshub_brand.rb
 COPY ./custom/notification_listener.rb /app/app/listeners/notification_listener.rb
 # v1.13 — SearchService: aplica PermissionFilterService nas buscas
 COPY ./custom/search_service.rb /app/app/services/search_service.rb
+# Chat Interno: cria automaticamente o inbox "Chat Interno" ao iniciar o servidor
+COPY ./custom/internal_chat_inbox.rb /app/config/initializers/internal_chat_inbox.rb
 
 # Copiar layout customizado com tema de cores
 COPY ./custom/vueapp.html.erb /app/app/views/layouts/vueapp.html.erb
