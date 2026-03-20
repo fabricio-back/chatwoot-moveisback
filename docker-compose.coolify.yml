@@ -131,66 +131,6 @@ services:
       interval: 20s
       timeout: 20s
       retries: 10
-  kanban-backend:
-    image: 'astraonline/kanbanback:develop'
-    pull_policy: always
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      # Banco próprio do Kanban (esquema kanbancw dentro do mesmo Postgres do Chatwoot)
-      - 'DATABASE_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-chatwoot_production}?schema=kanbancw'
-      # Banco do Chatwoot — usado para injetar o Dashboard Script em installation_configs
-      - 'CHATWOOT_DATABASE_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-chatwoot_production}'
-      # URL pública do FRONTEND do Kanban — usada para gerar o src do iframe no Dashboard Script
-      - 'KANBANCW_DOMAIN=${KANBAN_FRONTEND_URL}'
-      # URL pública do backend do Kanban — usada para chamadas de API internas
-      - 'KANBANCW_API_DOMAIN=${KANBAN_BACKEND_URL}'
-      - 'CHATWOOT_DOMAIN=${FRONTEND_URL}'
-      # URL INTERNA do Chatwoot (via rede Docker) — evita chamar localhost dentro do container
-      - CHATWOOT_API_URL=http://rails:3000
-      - 'CORS_ORIGIN=${FRONTEND_URL},${KANBAN_FRONTEND_URL}'
-      # Redis compartilhado com o Chatwoot
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - 'REDIS_PASSWORD=${SERVICE_PASSWORD_REDIS}'
-    restart: always
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - 'wget -qO- http://localhost:3000/health'
-      interval: 30s
-      timeout: 10s
-      retries: 10
-    labels:
-      # Rota adicional: captura /socket.io/ vindo do domínio do frontend e faz proxy para o backend
-      - 'traefik.http.routers.kanban-socketio.rule=Host(`kanban.moveisback.com.br`) && PathPrefix(`/socket.io`)'
-      - 'traefik.http.routers.kanban-socketio.entrypoints=https'
-      - 'traefik.http.routers.kanban-socketio.tls=true'
-      - 'traefik.http.routers.kanban-socketio.service=kanban-socketio-svc'
-      - 'traefik.http.services.kanban-socketio-svc.loadbalancer.server.port=3000'
-
-  kanban-frontend:
-    image: 'astraonline/kanbanfront:develop'
-    pull_policy: always
-    depends_on:
-      - kanban-backend
-    environment:
-      # URL pública do backend do Kanban — usada pelo Vite para chamadas de API
-      - 'VITE_API_URL=${KANBAN_BACKEND_URL}'
-      # URL usada pelo nginx do container para proxy de /api/ e /socket.io/
-      - 'API_URL=${KANBAN_BACKEND_URL}'
-    restart: always
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - 'wget -qO- http://localhost:80/nginx-health || exit 1'
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
   baileys-api:
     image: 'ghcr.io/fazer-ai/baileys-api:latest'
     pull_policy: always
