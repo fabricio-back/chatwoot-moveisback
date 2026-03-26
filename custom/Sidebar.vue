@@ -710,13 +710,22 @@ const menuItems = computed(() => {
     },
   ];
 
-  if (dashboardApps.value.length > 0) {
+  // Filtrar DashboardApps indesejados do fazer-ai que não são usados
+  const HIDDEN_APP_NAMES = [
+    'kanban', 'conexões', 'conexoes', 'chats internos',
+    'projetos', 'chatbot flows', 'config extra',
+  ];
+  const visibleApps = dashboardApps.value.filter(
+    app => !HIDDEN_APP_NAMES.includes(app.title?.toLowerCase?.() ?? '')
+  );
+
+  if (visibleApps.length > 0) {
     const settingsIndex = items.findIndex(item => item.name === 'Settings');
     items.splice(settingsIndex, 0, {
       name: 'Apps',
       label: t('SIDEBAR.APPS'),
       icon: 'i-lucide-layout-grid',
-      children: dashboardApps.value.map(app => ({
+      children: visibleApps.map(app => ({
         name: `app-${app.id}`,
         label: app.title,
         to: accountScopedRoute('dashboard_app_view', { appId: app.id }),
