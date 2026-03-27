@@ -75,7 +75,8 @@ const fmt = ts => {
   const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   return today ? time : d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + time;
 };
-const isMe = msg => msg.sender?.id === currentUser.value?.id;
+// Compara como Number para evitar false negativo (string vs number) entre API e store
+const isMe = msg => Number(msg.sender?.id) === Number(currentUser.value?.id);
 const dotColor = s => ({ online: 'bg-green-400', busy: 'bg-amber-400' })[s] ?? 'bg-gray-400';
 const dotLabel = s => ({ online: 'Online', busy: 'Ocupado' })[s] ?? 'Offline';
 
@@ -213,7 +214,7 @@ const sendMessage = async () => {
   try {
     await apiPost(
       `/api/v1/accounts/${accountId.value}/conversations/${conversationId.value}/messages`,
-      { content: text, message_type: 'outgoing' }
+      { content: text, message_type: 'outgoing', author_id: currentUser.value?.id }
     );
     await loadMessages();
   } catch {
