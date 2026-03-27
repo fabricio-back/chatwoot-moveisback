@@ -881,20 +881,23 @@ const menuItems = computed(() => {
           :is-collapsed="isEffectivelyCollapsed"
           @open-key-shortcut-modal="emit('openKeyShortcutModal')"
         />
+        <!-- Chat Interno: modo expandido (com label) -->
         <button
           v-if="!isEffectivelyCollapsed"
-          class="flex items-center justify-center size-7 rounded-lg hover:bg-n-alpha-2 transition-colors flex-shrink-0"
+          class="flex items-center gap-1.5 px-2 h-7 rounded-lg hover:bg-n-alpha-2 transition-colors flex-shrink-0 text-xs font-medium"
           :class="{ 'bg-n-alpha-2 text-n-brand': isInternalChatOpen, 'text-n-slate-11': !isInternalChatOpen }"
-          title="Chat Interno"
+          title="Chat Interno — mensagens entre agentes"
           @click="isInternalChatOpen = !isInternalChatOpen"
         >
           <span class="i-lucide-message-square-text size-4" />
+          <span>Chats</span>
         </button>
+        <!-- Chat Interno: modo colapsado -->
         <button
           v-else
           class="flex items-center justify-center size-8 rounded-lg hover:bg-n-alpha-2 transition-colors"
           :class="{ 'bg-n-alpha-2 text-n-brand': isInternalChatOpen, 'text-n-slate-11': !isInternalChatOpen }"
-          title="Chat Interno"
+          title="Chat Interno — mensagens entre agentes"
           @click="isInternalChatOpen = !isInternalChatOpen"
         >
           <span class="i-lucide-message-square-text size-4" />
@@ -903,12 +906,12 @@ const menuItems = computed(() => {
     </section>
     <!-- Chat Interno: overlay que cobre o sidebar quando aberto -->
     <Transition
-      enter-active-class="transition-transform duration-200 ease-out"
-      enter-from-class="-translate-x-full"
-      enter-to-class="translate-x-0"
-      leave-active-class="transition-transform duration-150 ease-in"
-      leave-from-class="translate-x-0"
-      leave-to-class="-translate-x-full"
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
     >
       <div
         v-if="isInternalChatOpen"
