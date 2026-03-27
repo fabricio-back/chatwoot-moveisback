@@ -88,16 +88,16 @@ const toggleHidden = title => {
   saveHidden();
 };
 
+onMounted(() => {
+  loadPersisted();
+  store.dispatch('labels/get');
+});
+
 watch(labels, newLabels => {
   if (newLabels.length > 0) {
     syncColumns(newLabels);
     fetchAll();
   }
-}, { immediate: true });
-
-onMounted(() => {
-  loadPersisted();
-  store.dispatch('labels/get');
 });
 
 // --- Fetch ---

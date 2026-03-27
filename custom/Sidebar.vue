@@ -714,13 +714,19 @@ const menuItems = computed(() => {
   const HIDDEN_APP_NAMES = [
     'kanban', 'conexões', 'conexoes', 'chats internos', 'chats_internos',
     'projetos', 'chatbot flows', 'chatbot_flows', 'config extra', 'config_extra',
-    'connections', 'flows',
+    'connections', 'flows', 'conexes', 'conex',
   ];
   const isHiddenApp = app => {
     const title = (app.title ?? app.name ?? '').toLowerCase();
-    return HIDDEN_APP_NAMES.some(n => title.includes(n));
+    console.log('[SIDEBAR DEBUG] DashboardApp found:', { id: app.id, title: app.title, name: app.name, content: app.content?.substring(0, 50) });
+    const hidden = HIDDEN_APP_NAMES.some(n => title.includes(n));
+    if (hidden) {
+      console.log('[SIDEBAR DEBUG] ❌ BLOCKED:', title);
+    }
+    return hidden;
   };
   const visibleApps = dashboardApps.value.filter(app => !isHiddenApp(app));
+  console.log('[SIDEBAR DEBUG] Total apps:', dashboardApps.value.length, 'Visible:', visibleApps.length, 'Blocked:', dashboardApps.value.length - visibleApps.length);
 
   if (visibleApps.length > 0) {
     const settingsIndex = items.findIndex(item => item.name === 'Settings');
