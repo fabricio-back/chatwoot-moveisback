@@ -56,6 +56,13 @@ RUN find /build/app/javascript -type f \( -name "*.js" -o -name "*.ts" -o -name 
       -e 's|http://kanban\.moveisback\.com\.br[^"'\''`]*|http://localhost:65535|g' \
     && echo "Kanban URLs neutralizadas com CACHEBUST=$CACHEBUST" || true
 
+# Patch Message.vue: mensagens de agente diferentes do usuário atual aparecem no lado ESQUERDO
+# Isso permite que chats internos agente-a-agente mostrem lados corretos (como WhatsApp)
+RUN sed -i \
+  's|return senderType\.toLowerCase() === SENDER_TYPES\.USER\.toLowerCase();|if (senderType.toLowerCase() === SENDER_TYPES.USER.toLowerCase()) { return Number(senderId) === Number(props.currentUserId); } return false;|g' \
+  /build/app/javascript/dashboard/components-next/message/Message.vue \
+  && echo "Message.vue patched: left/right alignment by sender id at CACHEBUST=$CACHEBUST" || echo "WARN: Message.vue patch failed"
+
 # Instalar pnpm via corepack (versão fixada para evitar incompatibilidade)
 RUN echo "CACHEBUST=$CACHEBUST - Setting up pnpm" && \
     corepack enable && \
