@@ -1,4 +1,4 @@
-# v1.13 — SearchService: aplica PermissionFilterService nas queries de conversas e mensagens.
+# v1.13 — SearchService: aplica filtro de permissões nas queries de conversas e mensagens.
 # Agentes só encontram conversas/mensagens onde são assignee ou participantes.
 class SearchService
   attr_reader :current_user, :current_account, :q, :page
@@ -26,7 +26,14 @@ class SearchService
 
   def accessible_conversations
     base = current_account.conversations
-    Conversations::PermissionFilterService.new(base, current_user, current_account).perform
+    
+    # Se for admin, retorna todas
+    return base if administrator?
+    
+    # Se não for admin: filtra conversas onde o usuário é assignee ou participante
+    base.where('assignee_id = :user_id OR id IN (
+      SELECT conversation_id FROM conversation_participants WHERE user_id = :user_id
+    )', user_id: current_user.id)
   end
 
   def accessible_conversation_ids
@@ -34,8 +41,9 @@ class SearchService
   end
 
   def search_contacts
+    # Busca em name, email, phone_number e também em identifier (ID customizado do contato)
     current_account.contacts
-                   .where('name ILIKE :q OR email ILIKE :q OR phone_number ILIKE :q', q: "%#{q}%")
+                   .where('name ILIKE :q OR email ILIKE :q OR phone_number ILIKE :q OR identifier ILIKE :q', q: "%#{q}%")
                    .limit(10)
   end
 
