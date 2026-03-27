@@ -29,4 +29,5 @@ jobs:
           context: .
           file: Dockerfile.full
           push: true
+          no-cache: true
           tags: ghcr.io/fabricio-back/chatwoot-moveisback:latest
