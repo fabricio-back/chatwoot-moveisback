@@ -34,6 +34,7 @@ const selectedCard = ref(null);
 const cardNote = ref('');
 const notes = ref({});
 const savingNote = ref(false);
+const noteSaved = ref(false); // feedback visual do botão Salvar nota
 const loadedContactNote = ref(''); // rastreia nota carregada da API (evita duplicatas)
 const cardHistory = ref({ loading: false, timeline: [] });
 
@@ -290,6 +291,20 @@ const openCard = async conv => {
   cardHistory.value = { loading: false, timeline: buildLabelTimeline(msgs, labels.value) };
 };
 
+const saveNoteExplicit = async () => {
+  if (!selectedCard.value) return;
+  const contactId = selectedCard.value.meta?.sender?.id;
+  const content = cardNote.value.trim();
+  if (!content) return;
+  savingNote.value = true;
+  notes.value[selectedCard.value.id] = cardNote.value;
+  saveNotes();
+  await saveContactNote(contactId, content);
+  savingNote.value = false;
+  noteSaved.value = true;
+  setTimeout(() => { noteSaved.value = false; }, 2000);
+};
+
 const closeCard = async () => {
   if (selectedCard.value) {
     notes.value[selectedCard.value.id] = cardNote.value;
@@ -304,6 +319,7 @@ const closeCard = async () => {
   selectedCard.value = null;
   cardNote.value = '';
   loadedContactNote.value = '';
+  noteSaved.value = false;
   cardHistory.value = { loading: false, timeline: [] };
 };
 
@@ -375,6 +391,11 @@ const clearFilters = () => {
 
 const filteredConvs = col => {
   let convs = col.conversations;
+  // Exibe a conversa APENAS na coluna da última etiqueta atribuída
+  convs = convs.filter(c =>
+    Array.isArray(c.labels) && c.labels.length > 0 &&
+    c.labels[c.labels.length - 1] === col.title
+  );
   const q = filterSearch.value.trim().toLowerCase();
   if (q) {
     convs = convs.filter(c =>
@@ -696,7 +717,7 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
                   : 'bg-n-solid-3 text-n-slate-10'
               "
             >
-              {{ col.loading ? '…' : (hasActiveFilters ? filteredConvs(col).length + '/' + col.conversations.length : col.conversations.length) }}
+              {{ col.loading ? '…' : (hasActiveFilters ? filteredConvs(col).length + '/' + col.conversations.filter(c => Array.isArray(c.labels) && c.labels[c.labels.length - 1] === col.title).length : col.conversations.filter(c => Array.isArray(c.labels) && c.labels[c.labels.length - 1] === col.title).length) }}
             </span>
             <button
               class="p-1 rounded text-n-slate-8 hover:text-n-slate-11 hover:bg-n-solid-3 transition-colors"
@@ -736,9 +757,15 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
             >
               <!-- Contact + time -->
               <div class="flex items-start justify-between gap-2 mb-1.5">
-                <span class="text-sm font-medium text-n-slate-12 leading-tight truncate">
-                  {{ conv.meta?.sender?.name || 'Contato' }}
-                </span>
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="text-sm font-medium text-n-slate-12 leading-tight truncate">
+                    {{ conv.meta?.sender?.name || 'Contato' }}
+                  </span>
+                  <span
+                    v-if="conv.unread_count > 0"
+                    class="flex-shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none"
+                  >{{ conv.unread_count > 99 ? '99+' : conv.unread_count }}</span>
+                </div>
                 <div class="flex items-center gap-1 flex-shrink-0 mt-0.5">
                   <button
                     class="p-0.5 rounded text-n-slate-7 hover:text-[var(--color-woot-500)] transition-colors"
@@ -895,24 +922,39 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
           </div>
 
           <!-- Actions -->
-          <div class="flex items-center justify-end gap-2 px-5 py-4 border-t border-n-weak">
+          <div class="flex items-center justify-between gap-2 px-5 py-4 border-t border-n-weak">
+            <!-- Salvar nota -->
             <button
-              class="px-4 py-2 rounded-lg text-sm text-n-slate-11 border border-n-weak bg-n-solid-2 hover:bg-n-solid-3 transition-colors disabled:opacity-50 flex items-center gap-1.5"
-              :disabled="savingNote"
-              @click="closeCard"
+              class="px-3 py-2 rounded-lg text-sm border transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              :class="noteSaved
+                ? 'border-green-500/40 bg-green-500/10 text-green-600 dark:text-green-400'
+                : 'border-n-weak bg-n-solid-2 hover:bg-n-solid-3 text-n-slate-11'"
+              :disabled="savingNote || !cardNote.trim()"
+              @click="saveNoteExplicit"
             >
               <span v-if="savingNote" class="i-lucide-loader-circle size-3.5 animate-spin" />
-              Fechar
+              <span v-else-if="noteSaved" class="i-lucide-check size-3.5" />
+              <span v-else class="i-lucide-save size-3.5" />
+              {{ noteSaved ? 'Salvo!' : 'Salvar nota' }}
             </button>
-            <button
-              class="px-4 py-2 rounded-lg text-sm font-medium text-n-white bg-[var(--color-woot-500)] hover:bg-[var(--color-woot-600)] transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-60"
-              :disabled="savingNote"
-              @click="goToConversation"
-            >
-              <span v-if="savingNote" class="i-lucide-loader-circle size-3.5 animate-spin" />
-              <span v-else class="i-lucide-message-circle size-3.5" />
-              Ir para conversa
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                class="px-4 py-2 rounded-lg text-sm text-n-slate-11 border border-n-weak bg-n-solid-2 hover:bg-n-solid-3 transition-colors disabled:opacity-50"
+                :disabled="savingNote"
+                @click="closeCard"
+              >
+                Fechar
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg text-sm font-medium text-n-white bg-[var(--color-woot-500)] hover:bg-[var(--color-woot-600)] transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-60"
+                :disabled="savingNote"
+                @click="goToConversation"
+              >
+                <span v-if="savingNote" class="i-lucide-loader-circle size-3.5 animate-spin" />
+                <span v-else class="i-lucide-message-circle size-3.5" />
+                Ir para conversa
+              </button>
+            </div>
           </div>
         </div>
       </div>
