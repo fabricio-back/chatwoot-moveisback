@@ -18,7 +18,7 @@ Rails.application.config.after_initialize do
         name_binds = unwanted_names.map { |n| "%#{DashboardApp.sanitize_sql_like(n)}%" }
         name_placeholders = unwanted_names.map { 'title ILIKE ?' }.join(' OR ')
         apps_to_remove = DashboardApp.where(
-          "(#{name_placeholders}) OR content ~* 'kanban|moveisback\\.com\\.br'",
+          "(#{name_placeholders}) OR content::text ~* 'kanban|moveisback\\.com\\.br'",
           *name_binds
         )
 
