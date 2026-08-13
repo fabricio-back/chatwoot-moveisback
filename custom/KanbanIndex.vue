@@ -145,7 +145,7 @@ const fetchColumn = async labelTitle => {
   try {
     let all = [];
     let page = 1;
-    const MAX_PAGES = 40; // ~1000 conversas por coluna; evita loop infinito em bug de API
+    const MAX_PAGES = 5; // ~125 conversas por coluna; aumentar se precisar de mais histórico
     while (page <= MAX_PAGES) {
       const response = await axios.get(
         `/api/v1/accounts/${accountId.value}/conversations`,
@@ -389,25 +389,38 @@ const clearFilters = () => {
   filterAssignee.value = '';
 };
 
-const filteredConvs = col => {
-  let convs = col.conversations;
-  // Exibe a conversa APENAS na coluna da última etiqueta atribuída
-  convs = convs.filter(c =>
-    Array.isArray(c.labels) && c.labels.length > 0 &&
-    c.labels[c.labels.length - 1] === col.title
-  );
+// labelsMap evita O(n) find no template a cada render
+const labelsMap = computed(() => {
+  const m = {};
+  for (const l of labels.value) m[l.title] = l;
+  return m;
+});
+
+const labelColor = title => labelsMap.value[title]?.color ?? '#6b7280';
+
+// computed evita recalcular filtros 3× por coluna por render
+const filteredConvsMap = computed(() => {
   const q = filterSearch.value.trim().toLowerCase();
-  if (q) {
-    convs = convs.filter(c =>
-      (c.meta?.sender?.name ?? '').toLowerCase().includes(q) ||
-      String(c.id).includes(q)
+  const result = {};
+  for (const col of labelColumns.value) {
+    const deduped = col.conversations.filter(c =>
+      Array.isArray(c.labels) && c.labels.length > 0 &&
+      c.labels[c.labels.length - 1] === col.title
     );
+    let filtered = deduped;
+    if (q) {
+      filtered = filtered.filter(c =>
+        (c.meta?.sender?.name ?? '').toLowerCase().includes(q) ||
+        String(c.id).includes(q)
+      );
+    }
+    if (filterAssignee.value) {
+      filtered = filtered.filter(c => String(c.meta?.assignee?.id) === String(filterAssignee.value));
+    }
+    result[col.title] = { convs: filtered, total: deduped.length };
   }
-  if (filterAssignee.value) {
-    convs = convs.filter(c => String(c.meta?.assignee?.id) === String(filterAssignee.value));
-  }
-  return convs;
-};
+  return result;
+});
 
 const activeFilterCount = computed(() => {
   let n = 0;
@@ -659,7 +672,7 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
 
       <!-- Results summary -->
       <span v-if="hasActiveFilters" class="text-xs text-n-slate-9 ml-auto flex-shrink-0">
-        {{ visibleColumns.reduce((t, col) => t + filteredConvs(col).length, 0) }} conversa(s) encontrada(s)
+        {{ visibleColumns.reduce((t, col) => t + filteredConvsMap[col.title].convs.length, 0) }} conversa(s) encontrada(s)
       </span>
     </div>
 
@@ -717,7 +730,7 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
                   : 'bg-n-solid-3 text-n-slate-10'
               "
             >
-              {{ col.loading ? '…' : (hasActiveFilters ? filteredConvs(col).length + '/' + col.conversations.filter(c => Array.isArray(c.labels) && c.labels[c.labels.length - 1] === col.title).length : col.conversations.filter(c => Array.isArray(c.labels) && c.labels[c.labels.length - 1] === col.title).length) }}
+              {{ col.loading ? '…' : (hasActiveFilters ? filteredConvsMap[col.title].convs.length + '/' + filteredConvsMap[col.title].total : filteredConvsMap[col.title].total) }}
             </span>
             <button
               class="p-1 rounded text-n-slate-8 hover:text-n-slate-11 hover:bg-n-solid-3 transition-colors"
@@ -735,7 +748,7 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
             <span class="i-lucide-loader-circle size-5 text-n-slate-9 animate-spin" />
           </div>
           <div
-            v-else-if="filteredConvs(col).length === 0"
+            v-else-if="filteredConvsMap[col.title].convs.length === 0"
             class="flex flex-col items-center justify-center py-10 gap-2 text-n-slate-9"
           >
             <span class="i-lucide-inbox size-6 opacity-30" />
@@ -748,7 +761,7 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
           </div>
           <template v-else>
             <div
-              v-for="conv in filteredConvs(col)"
+              v-for="conv in filteredConvsMap[col.title].convs"
               :key="conv.id"
               draggable="true"
               class="rounded-lg bg-n-solid-1 border border-n-weak p-3 cursor-grab active:cursor-grabbing hover:border-n-strong hover:shadow-sm transition-all select-none"
@@ -792,8 +805,8 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
                   :key="lbl"
                   class="px-1.5 py-0.5 rounded text-[10px] font-medium"
                   :style="{
-                    backgroundColor: (labels.find(l => l.title === lbl)?.color ?? '#6b7280') + '22',
-                    color: labels.find(l => l.title === lbl)?.color ?? '#6b7280',
+                    backgroundColor: labelColor(lbl) + '22',
+                    color: labelColor(lbl),
                   }"
                 >{{ lbl }}</span>
               </div>
@@ -841,8 +854,8 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
                 :key="lbl"
                 class="px-2 py-0.5 rounded text-[11px] font-medium"
                 :style="{
-                  backgroundColor: (labels.find(l => l.title === lbl)?.color ?? '#6b7280') + '22',
-                  color: labels.find(l => l.title === lbl)?.color ?? '#6b7280',
+                  backgroundColor: labelColor(lbl) + '22',
+                  color: labelColor(lbl),
                 }"
               >{{ lbl }}</span>
             </template>
@@ -881,12 +894,12 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
                 <!-- Dot colorido -->
                 <div
                   class="size-2.5 rounded-full flex-shrink-0"
-                  :style="{ backgroundColor: labels.find(l => l.title === item.label)?.color ?? '#6b7280' }"
+                  :style="{ backgroundColor: labelColor(item.label) }"
                 />
                 <!-- Label -->
                 <span
                   class="text-[11px] font-medium flex-1 truncate"
-                  :style="{ color: labels.find(l => l.title === item.label)?.color ?? '#6b7280' }"
+                  :style="{ color: labelColor(item.label) }"
                 >{{ item.label }}</span>
                 <!-- Duração -->
                 <span
@@ -1015,7 +1028,7 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
                 <div class="flex flex-col items-center flex-shrink-0">
                   <div
                     class="size-3 rounded-full mt-1 ring-2 ring-n-solid-1"
-                    :style="{ backgroundColor: labels.find(l => l.title === item.label)?.color ?? '#6b7280' }"
+                    :style="{ backgroundColor: labelColor(item.label) }"
                   />
                   <div
                     v-if="idx < currentHistory.timeline.length - 1"
@@ -1031,8 +1044,8 @@ const currentHistory = computed(() => historyData.value[historyConvId.value] || 
                     <span
                       class="px-2 py-0.5 rounded text-[11px] font-medium"
                       :style="{
-                        backgroundColor: (labels.find(l => l.title === item.label)?.color ?? '#6b7280') + '22',
-                        color: labels.find(l => l.title === item.label)?.color ?? '#6b7280',
+                        backgroundColor: labelColor(item.label) + '22',
+                        color: labelColor(item.label),
                       }"
                     >{{ item.label }}</span>
                     <!-- Duração -->
