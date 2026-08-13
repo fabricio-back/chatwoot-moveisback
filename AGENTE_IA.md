@@ -17,10 +17,10 @@ GitHub push → GitHub Actions → Dockerfile.full (build) → ghcr.io/fabricio-
 - **Stage 1** (`node:24-alpine`): clona `fazer-ai/chatwoot` na tag fixada, copia os arquivos Vue/JS customizados, executa `pnpm build` (Vite + SDK)
 - **Stage 2** (`ghcr.io/fazer-ai/chatwoot:<tag>`): copia os assets Vite compilados + todos os arquivos Ruby customizados
 
-**Versão atual fixada:** `v4.15.1-fazer-ai.86`  
+**Versão atual fixada:** `v4.16.2-fazer-ai.92`  
 A tag aparece em dois lugares no `Dockerfile.full`:
-1. `git clone --branch v4.15.1-fazer-ai.86` (Stage 1)
-2. `FROM ghcr.io/fazer-ai/chatwoot:v4.15.1-fazer-ai.86` (Stage 2)
+1. `git clone --branch v4.16.2-fazer-ai.92` (Stage 1)
+2. `FROM ghcr.io/fazer-ai/chatwoot:v4.16.2-fazer-ai.92` (Stage 2)
 
 > **IMPORTANTE:** A tag usada no `FROM` do Stage 2 DEVE existir no GHCR (`ghcr.io/fazer-ai/chatwoot`), não apenas no GitHub. Se a imagem Docker para aquela tag não existir no registry, o build falha. Em caso de dúvida, use `latest` no Stage 2 e fixe apenas o clone no Stage 1.
 
