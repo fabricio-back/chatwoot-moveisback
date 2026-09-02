@@ -7,6 +7,9 @@ export const findPendingMessageIndex = (chat, message) => {
   );
 };
 
+export const isStaleConversation = (incoming, existing) =>
+  Boolean(existing) && incoming.updated_at < existing.updated_at;
+
 export const filterByStatus = (chatStatus, filterStatus) =>
   filterStatus === 'all' ? true : chatStatus === filterStatus;
 
@@ -61,6 +64,11 @@ export const applyPageFilters = (conversation, filters) => {
   );
 
   return shouldFilter;
+};
+
+export const humanAssignee = conversation => {
+  const { assignee, assignee_type: assigneeType } = conversation?.meta ?? {};
+  return assigneeType === 'AgentBot' ? undefined : assignee;
 };
 
 // v1.12 — agentes só veem conversas onde são assignee ou participantes
