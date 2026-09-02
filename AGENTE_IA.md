@@ -198,7 +198,6 @@ Serviços em produção:
 - `postgres` — `ghcr.io/fazer-ai/postgres-16-pgvector:latest`
 - `redis` — `redis:alpine`
 - `baileys-api` — `ghcr.io/fazer-ai/baileys-api:latest` (WhatsApp)
-- `metabase` — `metabase/metabase:latest` (porta 3001, analytics)
 
 Variáveis de ambiente obrigatórias no Coolify:
 - `FRONTEND_URL` — URL pública do Chatwoot
